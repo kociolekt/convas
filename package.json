@@ -1,0 +1,25 @@
+{
+  "name": "convas",
+  "version": "1.0.0",
+  "description": "clivas in chrome console",
+  "main": "index.js",
+  "scripts": {
+    "test": "example/index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kociolekt/convas.git"
+  },
+  "keywords": [
+    "convas",
+    "clivas",
+    "chrome",
+    "console"
+  ],
+  "author": "Tomasz Kociołek",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kociolekt/convas/issues"
+  },
+  "homepage": "https://github.com/kociolekt/convas"
+}
