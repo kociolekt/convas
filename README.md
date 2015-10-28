@@ -2,7 +2,9 @@
 Clivas in chrome console.
 [Click here to learn more about Clivas](https://github.com/mafintosh/clivas "Clivas Homepage").
 Available at npm:
+```sh
 npm install convas
+```
 # Usage
 Just use convas insted of clivas. It's node module so it's best to use browserify or something similar.
 ```javascript
