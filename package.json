@@ -1,6 +1,6 @@
 {
   "name": "convas",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "clivas in chrome console",
   "main": "index.js",
   "scripts": {
