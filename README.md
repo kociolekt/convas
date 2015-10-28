@@ -1,10 +1,14 @@
 # convas
 Clivas in chrome console.
+
 [Click here to learn more about Clivas](https://github.com/mafintosh/clivas "Clivas Homepage").
+
 Available at npm:
+
 ```sh
 npm install convas
 ```
+
 # Usage
 Just use convas insted of clivas. It's node module so it's best to use browserify or something similar.
 ```javascript
@@ -33,6 +37,3 @@ No all clivas methods are available. It's caused due to limitations of chrome co
 
 - convas.alias(name, value) - Add an alias to the format pattern i.e. convas.alias('link', 'red+underline') enables you to use {link:http://google.com}
 
-# TODO
-
-- fix: 20+green+underline not beeing green
