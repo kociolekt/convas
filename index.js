@@ -48,7 +48,7 @@ function SYNTAX_REPLACE(value, head) {
     case 'string':
       styleHeap.push(styleHeap.pop() + keywords[head]);
       return value;
-    
+
     case 'function':
       return keywords[head](value, head);
 
@@ -132,5 +132,6 @@ exports.keywords = keywords;
 exports.alias = alias;
 exports.use = use;
 exports.clear = clear;
+exports.write = write;
 exports.line = line;
 exports.times = times;
