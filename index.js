@@ -1,137 +1,143 @@
-var offset = 0;
-var lastClear = 0;
-var consoleObject;
-var baseStyle = '';
-var linesCache = [];
-var styleHeap = [];
-var alias = {};
-var keywords = {};
+(function(exports) {
+  var lastClear = 0;
+  var inverse = false;
+  var consoleObject;
+  var baseStyle = 'display: inline-block; padding: 0; margin: 0; box-sizing: border-box;';
+  var styleHeap = [];
+  var aliases = {};
+  var keywords = {};
 
-var WHITESPACE = Array(1000).join(' ');
+  var BUFFER = [''];
 
-var SYNTAX = /\{([^:\}]+)(?::([^\{\}]*))?\}/g;
+  var WHITESPACE = Array(1000).join('\xa0');
 
-keywords.bold = 'font-weight: bold;';
-keywords.italic = 'font-style: italic;';
-keywords.underline = 'text-decoration: underline;';
-keywords.blink = 'text-decoration: blink;';
-keywords.white = 'color: white;';
-keywords.grey = 'color: grey;';
-keywords.black = 'color: black;';
-keywords.blue = 'color: blue;';
-keywords.cyan = 'color: cyan;';
-keywords.green = 'color: green;';
-keywords.magenta = 'color: magenta;';
-keywords.red = 'color: red;';
-keywords.yellow = 'color: yellow;';
+  var SYNTAX = /\{([^:\}]+)(?::([^\{\}]*))?\}/g;
 
-keywords.inverse = function(value) {
-  styleHeap.push(
-    styleHeap.pop()
-    .replace('background-color: ', 'tmp: ')
-    .replace('color: ', 'background-color: ')
-    .replace('tmp: ', 'color: ')
-  );
-  return value;
-};
+  keywords.bold = 'font-weight: bold;';
+  keywords.italic = 'font-style: italic;';
+  keywords.underline = 'text-decoration: underline;';
+  keywords.blink = 'text-decoration: blink;';
+  keywords.white = 'color: white;';
+  keywords.grey = 'color: grey;';
+  keywords.black = 'color: black;';
+  keywords.blue = 'color: blue;';
+  keywords.cyan = 'color: cyan;';
+  keywords.green = 'color: green;';
+  keywords.magenta = 'color: magenta;';
+  keywords.red = 'color: red;';
+  keywords.yellow = 'color: yellow;';
 
-function SYNTAX_REPLACE(value, head) {
-  if (alias[head]) {
-    return alias[head].reduce(SYNTAX_REPLACE, value);
-  }
+  keywords.inverse = function(value) {
+    inverse = true;
+    return value;
+  };
 
-  var num = parseInt(head, 10);
+  var SYNTAX_REPLACE = function(value, head) {
+    if (aliases[head]) {
+      return aliases[head].reduce(SYNTAX_REPLACE, value);
+    }
 
-  if (num) return value+WHITESPACE.slice(0, Math.max(num-value.length,0));
+    var num = parseInt(head, 10);
 
-  switch(typeof keywords[head]){
-    case 'string':
-      styleHeap.push(styleHeap.pop() + keywords[head]);
-      return value;
+    if (num) return value+WHITESPACE.slice(0, Math.max(num-value.length,0));
 
-    case 'function':
-      return keywords[head](value, head);
+    switch(typeof keywords[head]){
+      case 'string':
+        styleHeap.push(styleHeap.pop() + (
+          inverse
+          ? keywords[head].replace('color: ', 'background-color: ')
+          : keywords[head]
+        ));
+        inverse = false;
+        return value;
 
-    case 'undefined':
-      return value;
-  }
-}
+      case 'function':
+        return keywords[head](value, head);
 
-function SYNTAX_REPLACE_ALL(_, heads, value) {
-  styleHeap.push(baseStyle);
-  var retval = heads.split('+').reduce(SYNTAX_REPLACE, '%c'+(value || '')+'%c');
-  styleHeap.push(baseStyle);
-  return retval;
-}
+      case 'undefined':
+        return value;
+    }
+  };
 
-function alias(name, value) {
-  linesCache = [];
-  if (typeof name === 'object') {
-    Object.keys(name).forEach(function(key) {
-      alias(key, name[key]);
-    });
-    return;
-  }
-  alias[name] = typeof value === 'string' ? value.split('+') : [value];
-}
+  var SYNTAX_REPLACE_ALL = function(_, heads, value) {
+    styleHeap.push(baseStyle);
+    var retval = '%c'+heads.split('+').reduce(SYNTAX_REPLACE, (value || ''))+'%c';
+    styleHeap.push(baseStyle);
+    return retval;
+  };
 
-function use(console) {
-  return consoleObject = console;
-}
+  var alias = function(name, value) {
+    if (typeof name === 'object') {
+      Object.keys(name).forEach(function(key) {
+        alias(key, name[key]);
+      });
+      return;
+    }
+    aliases[name] = typeof value === 'string' ? value.split('+') : [value];
+  };
 
-function clear(wait) {
-  if (Date.now() - lastClear < wait) {
-    return false;
-  }
-  consoleObject.clear();
-  return true;
-}
+  var use = function(console) {
+    return consoleObject = console;
+  };
 
-function write(line) {
-  styleHeap = [];
-  line = [
-    '%c'+line.replace(SYNTAX, SYNTAX_REPLACE_ALL),
-    baseStyle
-  ].concat(styleHeap);
-  consoleObject.log.apply(consoleObject, line);
-  return line;
-}
+  var clear = function(wait) {
+    if (Date.now() - lastClear < wait) {
+      return false;
+    }
+    BUFFER = [''];
+    consoleObject.clear();
+    return true;
+  };
 
-function line(line) {
-  offset++;
-  line += '\n';
+  var write = function(value) {
+    inverse = false;
+    styleHeap = [];
+    BUFFER[0] += '%c'+value.replace(SYNTAX, SYNTAX_REPLACE_ALL);
+    BUFFER.push(baseStyle);
+    BUFFER = BUFFER.concat(styleHeap);
+    return BUFFER;
+  };
 
-  if (
-    arguments.length === 1 &&
-    linesCache[offset] &&
-    linesCache[offset][0] === line
-  ) {
-    consoleObject.log.apply(consoleObject, linesCache[offset][1]);
-    return linesCache[offset][1];
-  }
-  if (arguments.length === 1) {
-    linesCache[offset] = [line, write(line)];
-    return linesCache[offset][1];
-  }
+  var line = function(value) {
+    value += '\n';
 
-  return write.apply(exports, arguments);
-}
+    return write.apply(exports, arguments);
+  };
 
-function times(str, num) {
-  if (typeof num === 'string') {
-    var tmp = num;
-    num = str;
-    str = tmp;
-  }
-  return Array(num+1).join(str);
-}
+  var draw = function() {
+    consoleObject.log.apply(consoleObject, BUFFER);
+    BUFFER = [''];
+  };
 
-use(console);
+  var redraw = function() {
+    consoleObject.clear();
+    draw();
+  };
 
-exports.keywords = keywords;
-exports.alias = alias;
-exports.use = use;
-exports.clear = clear;
-exports.write = write;
-exports.line = line;
-exports.times = times;
+  var times = function(str, num) {
+    if (typeof num === 'string') {
+      var tmp = num;
+      num = str;
+      str = tmp;
+    }
+    return Array(num+1).join(str);
+  };
+
+  var base = function(style) {
+    baseStyle = style;
+  };
+
+  use(console);
+
+  exports.base = base;
+  exports.keywords = keywords;
+  exports.alias = alias;
+  exports.use = use;
+  exports.clear = clear;
+  exports.write = write;
+  exports.line = line;
+  exports.draw = draw;
+  exports.redraw = redraw;
+  exports.times = times;
+
+})(exports);
