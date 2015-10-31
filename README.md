@@ -1,7 +1,7 @@
 # convas
 Convas is [Clivas](https://github.com/mafintosh/clivas "Clivas Homepage") in chrome console.
 
-![Tetris in chrome console](//github.com/kociolekt/convas/raw/master/example/img/convas-tetris-example.png "Convas in action!")
+![Tetris in chrome console](//raw.githubusercontent.com/kociolekt/convas/master/example/img/convas-tetris-example.png "Convas in action!")
 
 Available at npm:
 
